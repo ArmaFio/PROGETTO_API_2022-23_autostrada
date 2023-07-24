@@ -23,13 +23,6 @@ typedef struct car{
     struct car *right;
 } car;
 
-typedef struct path{
-    int stop;
-    struct path *next;
-    struct path *prec;
-}path;
-
-
 highway_station* stsuccessor(highway_station **node){
     highway_station *curr=NULL,*curr2=NULL;
     curr=(*node);
@@ -322,45 +315,38 @@ void rottamauto(highway_station **highway, int distance, int autonomy){
     }
 }
 
-void trovapercorso(highway_station** partenza, highway_station** arrivo, int length, path **curr, path **bestp ,int *best){
+void trovapercorso(highway_station** partenza, highway_station** arrivo, int length, int **curr, int **bestp ,int *best){
     int a;
-    path* stop;
     highway_station *succ;
     if((*partenza)->maxcarautonomy==0&&(((*arrivo)->distance)!=((*partenza)->distance)))
         return;
-    stop=malloc(sizeof(path));
-    stop->stop=(*partenza)->distance;
-    stop->next=NULL;
-    stop->prec = (*curr)->prec;
-    free(*curr);
-    *curr = stop;
+    *curr=realloc(*curr,sizeof(int)*(length+1));
+    (*curr)[length]=(*partenza)->distance;
     length++;
     if((*partenza)->maxcarautonomy>=((*arrivo)->distance)-((*partenza)->distance)) {
         if (*best == 0 || length < *best) {
-            stop->next = malloc(sizeof(path));
-            stop->next->stop = (*arrivo)->distance;
-            stop->next->prec = stop;
-            stop->next->next=NULL;
-            *bestp = stop->next;
+            *curr=realloc(*curr,sizeof(int)*(length+1));
+            (*curr)[length]=(*arrivo)->distance;
+            length++;
+            free(*bestp);
+            *bestp = malloc(sizeof(int)*length);
+            for(a=0;a<length;a++){
+                (*bestp)[a]=(*curr)[a];
+            }
+            *curr=realloc(*curr, sizeof(int)*(length-2));
             *best = length;
         }
         else
-            free(stop);
+            *curr=realloc(*curr,sizeof(int)*(length-1));
         return;
     }
     else {
-       a = *best;
        succ = stsuccessor(partenza);
-       stop->next=malloc(sizeof(path));
-       stop->next->prec=stop;
        while (succ != NULL && (length <= (*best) - 2||*best==0) && succ->distance < (*arrivo)->distance&&succ->distance<=(*partenza)->distance+(*partenza)->maxcarautonomy) {
-           trovapercorso(&succ, arrivo, length, &((*curr)->next), bestp, best);
+           trovapercorso(&succ, arrivo, length, curr, bestp, best);
            succ = stsuccessor(&succ);
        }
-       if (a == *best)
-           free((*curr));
-       else
-           (*curr)->next=NULL;
+       *curr=realloc(*curr, sizeof(int) * (length - 1));
    }
 
 }
@@ -369,84 +355,67 @@ void trovapercorso(highway_station** partenza, highway_station** arrivo, int len
 
 
 
-void trovapercorsobackwards(highway_station** partenza, highway_station** arrivo, int length, path **curr, path **bestp ,int *best) {
-    path *stop;
+void trovapercorsobackwards(highway_station** partenza, highway_station** arrivo, int length, int **curr, int **bestp ,int *best) {
     highway_station *pred;
     int a;
     if ((*partenza)->maxcarautonomy==0&&(*partenza)->distance!=(*arrivo)->distance){
         return;
     }
-    stop=malloc(sizeof(path));
-    stop->stop=(*partenza)->distance;
-    stop->prec=*curr;
-    stop->next=NULL;
-    stop->prec = (*curr)->prec;
-    free(*curr);
-    *curr = stop;
+    *curr=realloc(*curr,sizeof(int)*(length+1));
+    (*curr)[length]=(*partenza)->distance;
     length++;
     if ((*partenza)->maxcarautonomy>=((*arrivo)->distance)-((*partenza)->distance)) {
         if (*best == 0 || length < *best) {
-            stop->next = malloc(sizeof(path));
-            stop->next->stop = (*arrivo)->distance;
-            stop->next->prec = stop;
-            stop->next->next=NULL;
-            *bestp = stop->next;
+            *curr=realloc(*curr,sizeof(int)*(length+1));
+            (*curr)[length]=(*arrivo)->distance;
+            length++;
+            free(*bestp);
+            *bestp = malloc(sizeof(int)*length);
+            for(a=0;a<length;a++){
+                (*bestp)[a]=(*curr)[a];
+            }
+            *curr=realloc(*curr, sizeof(int)*(length-2));
             *best = length;
         }
         else
-            free(stop);
+            *curr=realloc(*curr,sizeof(int)*(length-1));
         return;
     } else {
-        a=*best;
         pred= predecessor((partenza));
-        stop->next=malloc(sizeof(path));
-        stop->next->prec=stop;
         while(pred!=NULL&&pred->distance>=(*partenza)->distance-(pred->maxcarautonomy)&&(length <= (*best) - 2||(*best)==0)&&pred->distance > (*arrivo)->distance){
-            trovapercorsobackwards(&pred,arrivo,length,&((*curr)->next),bestp,best);
+            trovapercorsobackwards(&pred,arrivo,length,curr,bestp,best);
             pred= predecessor(&pred);
         }
-        if (a == *best)
-            free((*curr));
-        (*curr)->next=NULL;
+        *curr=realloc(*curr, sizeof(int) * (length - 1));
     }
 }
 
-path* pianificapercorso(highway_station **highway, int partenza, int arrivo){
+int pianificapercorso(highway_station **highway, int partenza, int arrivo, int**path){
     highway_station *part, *arr;
-    path *curr=NULL, *best=NULL;
-    int b=0;
+    int b=0, *best= malloc(sizeof(int)), *curr=malloc(sizeof(int));
     if(partenza==arrivo) {
-        best = malloc(sizeof(path));
-        best->stop = partenza;
+        best[0] = partenza;
     }
     else {
         part= cercastazione(highway,partenza);
         arr= cercastazione(highway,arrivo);
         if(part!=NULL&&arr!=NULL) {
-            curr = malloc(sizeof(path));
-            curr->prec=NULL;
             if (partenza < arrivo)
                 trovapercorso(&part, &arr, 0, &curr, &best, &b);
             else
                 trovapercorsobackwards(&part, &arr, 0, &curr, &best, &b);
-            while (best != NULL ) {
-                if (best->prec != NULL)
-                    best = best->prec;
-                else
-                    break;
-            }
         }
     }
-    return best;
+    *path=best;
+    return b;
 }
 
 
 
 int main(){
     char parola[MAXCOM], a;
-    int i=0, j, k, *m;
+    int i, j, k, *m, *path;
     highway_station *highway = NULL;
-    path *path;
     while((a =getchar_unlocked())!=EOF){
         parola[0]=a;
         i=1;
@@ -480,23 +449,18 @@ int main(){
         } else if (strcmp(parola, "pianifica-percorso ") == 0) {
             if (scanf("%d", &j)) {
                 if (scanf("%d", &k)) {
-                    path = pianificapercorso(&highway, j, k);
+                    a = pianificapercorso(&highway, j, k, &path);
                     if (path == NULL)
                         printf("nessun percorso\n");
                     else {
-                        printf("%d ", path->stop);
-                        while (path->next != NULL) {
-                            path = path->next;
-                            printf("%d ", path->stop);
-                            free(path->prec);
+                        for(i=0;i<a;i++){
+                           printf("%d ",path[i]);
                         }
-                        printf("\n");
                         free(path);
                     }
                 }
             }
         }
-        i=0;
         do{
             a=getchar_unlocked();
         }while(a!='\n'&&a!=EOF);
