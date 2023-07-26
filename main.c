@@ -250,6 +250,8 @@ void aggiungiauto(highway_station **highway, int distanza,int autonomia){
                     carprec->right = c;
                 c->prec = carprec;
             }
+            if (c->autonomy>curr->maxcarautonomy)
+                curr->maxcarautonomy=c->autonomy;
             curr->nCars++;
             printf("aggiunta\n");
             return;
@@ -342,7 +344,7 @@ void trovapercorso(highway_station** partenza, highway_station** arrivo, int len
     }
     else {
        succ = stsuccessor(partenza);
-       while (succ != NULL && (length <= (*best) - 2||*best==0) && succ->distance < (*arrivo)->distance&&succ->distance<=(*partenza)->distance+(*partenza)->maxcarautonomy) {
+       while (succ != NULL && (length <= (*best) - 2||*best==0) && succ->distance < (*arrivo)->distance&&succ->distance<=(*partenza)->distance+(*partenza)->maxcarautonomy&&!((succ)->maxcarautonomy==0&&(((*arrivo)->distance)!=((succ)->distance)))) {
            trovapercorso(&succ, arrivo, length, curr, bestp, best);
            succ = stsuccessor(&succ);
        }
@@ -358,13 +360,12 @@ void trovapercorso(highway_station** partenza, highway_station** arrivo, int len
 void trovapercorsobackwards(highway_station** partenza, highway_station** arrivo, int length, int **curr, int **bestp ,int *best) {
     highway_station *pred;
     int a;
-    if ((*partenza)->maxcarautonomy==0&&(*partenza)->distance!=(*arrivo)->distance){
+    if((*partenza)->maxcarautonomy==0&&(((*arrivo)->distance)!=((*partenza)->distance)))
         return;
-    }
     *curr=realloc(*curr,sizeof(int)*(length+1));
     (*curr)[length]=(*partenza)->distance;
     length++;
-    if ((*partenza)->maxcarautonomy>=((*arrivo)->distance)-((*partenza)->distance)) {
+    if ((*partenza)->maxcarautonomy>=((*partenza)->distance)-((*arrivo)->distance)) {
         if (*best == 0 || length < *best) {
             *curr=realloc(*curr,sizeof(int)*(length+1));
             (*curr)[length]=(*arrivo)->distance;
@@ -382,7 +383,7 @@ void trovapercorsobackwards(highway_station** partenza, highway_station** arrivo
         return;
     } else {
         pred= predecessor((partenza));
-        while(pred!=NULL&&pred->distance>=(*partenza)->distance-(pred->maxcarautonomy)&&(length <= (*best) - 2||(*best)==0)&&pred->distance > (*arrivo)->distance){
+        while(pred!=NULL&&pred->distance>=(*partenza)->distance-((*partenza)->maxcarautonomy)&&(length <= (*best) - 2||(*best)==0)&&pred->distance > (*arrivo)->distance && !((pred)->maxcarautonomy==0&&(((*arrivo)->distance)!=((pred)->distance)))){
             trovapercorsobackwards(&pred,arrivo,length,curr,bestp,best);
             pred= predecessor(&pred);
         }
@@ -395,11 +396,12 @@ int pianificapercorso(highway_station **highway, int partenza, int arrivo, int**
     int b=0, *best= malloc(sizeof(int)), *curr=malloc(sizeof(int));
     if(partenza==arrivo) {
         best[0] = partenza;
+        b=1;
     }
     else {
         part= cercastazione(highway,partenza);
         arr= cercastazione(highway,arrivo);
-        if(part!=NULL&&arr!=NULL) {
+        if(part!=NULL&&arr!=NULL&&!((part)->maxcarautonomy==0&&(((arr)->distance)!=((part)->distance)))) {
             if (partenza < arrivo)
                 trovapercorso(&part, &arr, 0, &curr, &best, &b);
             else
@@ -430,7 +432,7 @@ int main(){
                 if (scanf("%d", &k)) {
                     m = malloc(sizeof(int) * k);
                     for (i = 0; i < k; i++)
-                        if (scanf("%d", &m[i]));
+                        if (scanf("%d", &m[i]))
                     aggiungistazione(&highway, j, k, m);
                     free(m);
                 }
@@ -450,14 +452,15 @@ int main(){
             if (scanf("%d", &j)) {
                 if (scanf("%d", &k)) {
                     a = pianificapercorso(&highway, j, k, &path);
-                    if (path == NULL)
+                    if (a==0)
                         printf("nessun percorso\n");
                     else {
                         for(i=0;i<a;i++){
                            printf("%d ",path[i]);
                         }
-                        free(path);
+                        printf("\n");
                     }
+                    free(path);
                 }
             }
         }
