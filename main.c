@@ -153,7 +153,7 @@ void aggiungistazione (highway_station **highway, int distanza, int nAuto, int *
         else if (distanza > next->distance)
             next = next->right;
         else {
-            printf("non aggiunta\n");
+            printf("non aggiunta");
             free(*autonomia);
             return;
         }
@@ -213,7 +213,7 @@ void aggiungistazione (highway_station **highway, int distanza, int nAuto, int *
             new->nCars++;
         }
     }
-    printf("aggiunta\n");
+    printf("aggiunta");
     if(*autonomia!=NULL)
         free(*autonomia);
 }
@@ -224,7 +224,7 @@ void aggiungiauto(highway_station **highway, int distanza,int autonomia){
     int done=0;
     curr= cercastazione(highway, distanza);
     if(curr==NULL) {
-        printf("non aggiunta\n");
+        printf("non aggiunta");
         return;
     }
     carnext=curr->root;
@@ -239,6 +239,7 @@ void aggiungiauto(highway_station **highway, int distanza,int autonomia){
                 carnext->n++;
                 curr->nCars++;
                 done = 1;
+                printf("aggiunta");
                 break;
             }
         }
@@ -261,12 +262,12 @@ void aggiungiauto(highway_station **highway, int distanza,int autonomia){
             if (c->autonomy>curr->maxcarautonomy)
                 curr->maxcarautonomy=c->autonomy;
             curr->nCars++;
-            printf("aggiunta\n");
+            printf("aggiunta");
             return;
         }
     }
     else
-        printf("non aggiunta\n");
+        printf("non aggiunta");
 }
 
 
@@ -281,11 +282,11 @@ void demoliscistazione(highway_station **highway, int distance){
         else {
             curr2= rimuovistazione(highway, &curr);
             free(curr2);
-            printf("demolita\n");
+            printf("demolita");
             return;
         }
     }
-    printf("non demolita\n");
+    printf("non demolita");
 }
 
 
@@ -294,7 +295,7 @@ void rottamauto(highway_station **highway, int distance, int autonomy){
     car *curr2=NULL, *curr3=NULL;
     curr= cercastazione(highway,distance);
     if (curr==NULL||curr->nCars==0) {
-        printf("non rottamata\n");
+        printf("non rottamata");
         return;
     }
     else{
@@ -310,131 +311,119 @@ void rottamauto(highway_station **highway, int distance, int autonomy){
                     curr3= rimuoviauto(&(curr->root),&curr2);
                     if (curr2->autonomy==curr->maxcarautonomy) {
                         curr2=curr->root;
-                        while (curr2->right != NULL)
-                            curr2 = curr2->right;
-                        curr->maxcarautonomy = curr2->autonomy;
+                        if(curr2==NULL)
+                            curr->maxcarautonomy=0;
+                        else {
+                            while (curr2->right != NULL)
+                                curr2 = curr2->right;
+                            curr->maxcarautonomy = curr2->autonomy;
+                        }
                     }
                     free(curr3);
                 }
-                printf("rottamata\n");
+                curr->nCars--;
+                printf("rottamata");
                 return;
             }
         }
-        printf("non rottamata\n");
+        printf("non rottamata");
         return;
     }
 }
 
-void trovapercorso(highway_station **highway, highway_station** partenza, highway_station** arrivo, int length, int **curr, int **bestp ,int *best){
-    int a,i=0,j=0;
-    highway_station *succ, *temp=NULL, *prec=NULL;
-    if(((*partenza)->maxcarautonomy==0&&(((*arrivo)->distance)!=((*partenza)->distance)))||(*best!=0&&length>(*best)-2))
-        return;
-    *curr=realloc(*curr,sizeof(int)*(length+1));
-    (*curr)[length]=(*partenza)->distance;
-    length++;
-    if((*partenza)->maxcarautonomy>=((*arrivo)->distance)-((*partenza)->distance)) {
-        if (*best == 0 || length < *best ) {
-            if((*best)!=0) {
-                for (i = length - 1, j = (*best) - 2; j >= 0 && i >= 0; j--, i--) {
-                    if ((*bestp)[j] != (*curr)[i])
-                        break;
-                }
-            }
-            if((*bestp)[j]>=(*curr)[i]||(*best)==0) {
-                *curr = realloc(*curr, sizeof(int) * (length + 1));
-                (*curr)[length] = (*arrivo)->distance;
-                length++;
-                free(*bestp);
-                *bestp = malloc(sizeof(int) * length);
-                for (a = 0; a < length; a++) {
-                    (*bestp)[a] = (*curr)[a];
-                }
-                *curr = realloc(*curr, sizeof(int) * (length - 2));
-                *best = length;
-                return;
-            }
+void trovapercorso(highway_station** partenza, highway_station** arrivo, int *length, int **path){
+    highway_station *succ, *temp;
+    temp=(*arrivo);
+    do{
+        succ=(*partenza);
+        while(succ->maxcarautonomy<temp->distance-succ->distance&&succ!=NULL&&succ->distance<temp->distance){
+           succ= stsuccessor(&succ);
         }
-        *curr=realloc(*curr,sizeof(int)*(length-1));
-        return;
-    }
-    else if ((length <= (*best) - 2||(*best)==0)) {
-        if (length != 1)
-            prec = cercastazione(highway, (*curr)[length - 2]);
-        succ = stsuccessor(partenza);
-        while (succ != NULL && succ->distance <= (*partenza)->distance + (*partenza)->maxcarautonomy) {
-            temp = succ;
-            succ = stsuccessor(&succ);
+        if(!(succ!=NULL&&succ->distance<temp->distance)) {
+            (*length) = 0;
+            return;
         }
-        if (temp != NULL)
-            succ = temp;
-        while (succ != NULL && (length <= (*best) - 2 || (*best) == 0) && (length==1||succ->distance > prec->distance + prec->maxcarautonomy)) {
-            trovapercorso(highway, &succ, arrivo, length, curr, bestp, best);
-            succ = predecessor(&succ);
-        }
-        *curr = realloc(*curr, sizeof(int) * (length - 1));
-    }
-
+        (*length)++;
+        temp=succ;
+        (*path)=realloc((*path), sizeof(int)*(*length));
+        (*path)[(*length)-1]=succ->distance;
+    }while(temp!=(*partenza));
 }
 
 
 
 
 
-void trovapercorsobackwards(highway_station **highway, highway_station** partenza, highway_station** arrivo, int length, int **curr, int **bestp ,int *best) {
-    highway_station *pred, *temp=NULL, *prec=NULL;
-    int a,i=0,j=0;
-    if(((*partenza)->maxcarautonomy==0&&(((*arrivo)->distance)!=((*partenza)->distance)))||(*best!=0&&length>(*best)-2))
-        return;
-    *curr=realloc(*curr,sizeof(int)*(length+1));
-    (*curr)[length]=(*partenza)->distance;
-    length++;
-    if ((*partenza)->maxcarautonomy>=((*partenza)->distance)-((*arrivo)->distance)) {
-        if (*best == 0 || length < *best) {
-            if(*best!=0) {
-                for (i = length - 1, j = (*best) - 2; j >= 0 && i >= 0; j--, i--) {
-                    if ((*bestp)[j] != (*curr)[i])
-                        break;
+void trovapercorsobackwards(highway_station **highway, highway_station** partenza, highway_station** arrivo, int *length,  int **path ) {
+    int nearest, exnearest, revcount=0,count;
+    highway_station *succ, *temp=NULL, *curr=NULL, *curr2=NULL, *best=NULL, *curr3=NULL, *curr4=NULL,*curr5=NULL;
+    temp=(*partenza);
+    exnearest=temp->distance;
+    do{
+        succ=temp;
+        nearest=temp->distance;
+        while(succ!=NULL&&succ!=(*arrivo)&&temp->maxcarautonomy>=temp->distance-succ->distance&&succ->distance>(*arrivo)->distance){
+            succ= predecessor(&succ);
+            if(temp->maxcarautonomy>=temp->distance-succ->distance) {
+                if(succ==(*arrivo)) {
+                    best = succ;
+                    nearest= succ->distance;
+                    break;
+                }
+                curr=succ;
+                while(curr!=(*arrivo)&&curr!=NULL&&curr->distance>=succ->distance-succ->maxcarautonomy) {
+                    curr2 = curr;
+                    curr = predecessor(&curr);
+                }
+                if(!(curr==(*arrivo)&&curr->distance>=succ->distance-succ->maxcarautonomy)) {
+                    curr = curr2;
+                    while (curr->maxcarautonomy == 0)
+                        curr = stsuccessor(&curr);
+                }
+                if(curr->distance<=nearest) {
+                    nearest = curr->distance;
+                    best = succ;
                 }
             }
-            if((*bestp)[j]>=(*curr)[i]||(*best==0)) {
-                *curr = realloc(*curr, sizeof(int) * (length + 1));
-                (*curr)[length] = (*arrivo)->distance;
-                length++;
-                free(*bestp);
-                *bestp = malloc(sizeof(int) * length);
-                for (a = 0; a < length; a++) {
-                    (*bestp)[a] = (*curr)[a];
+        }
+        if(!(succ!=NULL&&succ->distance>=(*arrivo)->distance&&curr!=NULL&&nearest!=temp->distance)) {
+            (*length) = 0;
+            return;
+        }
+        if(best->distance>exnearest){
+            for(count=0;count<=revcount;count++) {
+                if(count==0)
+                    curr5=best;
+                else
+                    curr5= cercastazione(highway,(*path)[(*length) - (count)]);
+                if ((*length)-count > 1)
+                    curr3 = cercastazione(highway, (*path)[(*length) - 2 - count]);
+                else
+                    curr3 = (*partenza);
+                curr4=curr3;
+                while (curr3->maxcarautonomy >= curr3->distance - curr4->distance) {
+                    curr4 = predecessor(&curr4);
+                    if (curr4->maxcarautonomy >= curr4->distance - curr5->distance &&
+                        curr3->maxcarautonomy >= curr3->distance - curr4->distance)
+                        (*path)[(*length) - 1 - count] = curr4->distance;
                 }
-                *curr = realloc(*curr, sizeof(int) * (length - 2));
-                *best = length;
-                return;
             }
+            revcount++;
         }
-        else
-            *curr=realloc(*curr,sizeof(int)*(length-1));
-        return;
-    } else if((length <= (*best) - 2||*best==0)){
-        if(length!=1)
-            prec= cercastazione(highway, (*curr)[length-2]);
-        pred= predecessor((partenza));
-        while (pred != NULL && pred ->distance >= (*partenza)->distance - (*partenza)->maxcarautonomy) {
-            temp = pred;
-            pred = predecessor(&pred);
-        }
-        if (temp != NULL)
-            pred = temp;
-        while (pred != NULL && (length <= (*best) - 2 || (*best) == 0) && (length==1||pred->distance < prec->distance - prec->maxcarautonomy)) {
-            trovapercorso(highway, &pred, arrivo, length, curr, bestp, best);
-            pred = stsuccessor(&pred);
-        }
-        *curr=realloc(*curr, sizeof(int) * (length - 1));
-    }
+        else if (revcount>0)
+            revcount--;
+        (*length)++;
+        (*path) = realloc((*path), sizeof(int) * (*length));
+        (*path)[(*length) - 1] = best->distance;
+        temp=best;
+        exnearest=nearest;
+    }while(best!=(*arrivo));
 }
+
 
 int pianificapercorso(highway_station **highway, int partenza, int arrivo, int**path){
     highway_station *part, *arr;
-    int b=0, *best= malloc(sizeof(int)), *curr=malloc(sizeof(int));
+    int b=0, *best= malloc(sizeof(int));
     if(partenza==arrivo) {
         best[0] = partenza;
         b=1;
@@ -444,20 +433,21 @@ int pianificapercorso(highway_station **highway, int partenza, int arrivo, int**
         arr= cercastazione(highway,arrivo);
         if(part!=NULL&&arr!=NULL&&!((part)->maxcarautonomy==0&&(((arr)->distance)!=((part)->distance)))) {
             if (partenza < arrivo)
-                trovapercorso(highway,&part, &arr, 0, &curr, &best, &b);
+                trovapercorso(&part, &arr, &b,&best);
             else
-                trovapercorsobackwards(highway,&part, &arr, 0, &curr, &best, &b);
+                trovapercorsobackwards(highway,&part, &arr, &b, &best);
         }
     }
     *path=best;
+
     return b;
 }
 
 
 
 int main(){
-    char parola[MAXCOM], a;
-    int i, j, k, *m, *path;
+    char parola[MAXCOM],a;
+    int i, j, k, *m, *path,l;
     highway_station *highway = NULL;
     while((a =getchar_unlocked())!=EOF){
         parola[0]=a;
@@ -498,19 +488,31 @@ int main(){
         } else if (strcmp(parola, "pianifica-percorso ") == 0) {
             if (scanf("%d", &j)) {
                 if (scanf("%d", &k)) {
-                    a = pianificapercorso(&highway, j, k, &path);
-                    if (a==0)
-                        printf("nessun percorso\n");
+                    l = pianificapercorso(&highway, j, k, &path);
+                    if (l==0)
+                        printf("nessun percorso");
                     else {
-                        for(i=0;i<a;i++){
-                           printf("%d ",path[i]);
+                        if(k>j) {
+                            for (i = l - 1; i >= 0; i--) {
+                                printf("%d ", path[i]);
+                            }
+                            printf("%d", k);
                         }
-                        printf("\n");
+                        else{
+                            printf("%d ", j);
+                            for (i = 0; i < l; i++) {
+                                if(i==l-1)
+                                    printf("%d", path[i]);
+                                else
+                                    printf("%d ", path[i]);
+                            }
+                        }
                     }
                     free(path);
                 }
             }
         }
+        printf("\n");
         do{
             a=getchar_unlocked();
         }while(a!='\n'&&a!=EOF);
