@@ -5,7 +5,7 @@
 #define MAXCOM 21
 
 int main(){
-    char parola[MAXCOM],a;
+    char parola[MAXCOM+2],a;
     int i, j, k, *m, *path,l;
     highway_station *highway = NULL;
     while((a =getchar_unlocked())!=EOF){
@@ -39,11 +39,11 @@ int main(){
             aggiungiauto(highway, j, k);
         } else if (strcmp(parola, "demolisci-stazione ") == 0) {
             if (scanf( "%d", &j))
-            demoliscistazione(highway, j);
+            demoliscistazione(&highway, j);
         } else if (strcmp(parola, "rottama-auto ") == 0) {
             if (scanf( "%d", &j))
             if (scanf( "%d", &k))
-            rottamauto(highway, j, k);
+            rottamauto(&highway, j, k);
         } else if (strcmp(parola, "pianifica-percorso ") == 0) {
             if (scanf("%d", &j)) {
                 if (scanf("%d", &k)) {

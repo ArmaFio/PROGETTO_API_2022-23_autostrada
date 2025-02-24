@@ -59,7 +59,7 @@ car* carsuccessor(car *node){
     return curr;
 }
 
-car* rimuoviauto(car *root, car *node){
+car* rimuoviauto(car **root, car *node){
     car *y=NULL, *x=NULL;
     if (node->right==NULL || node->left==NULL)
         y=node;
@@ -71,7 +71,7 @@ car* rimuoviauto(car *root, car *node){
     if (x!=NULL)
         x->prec=y->prec;
     if (y->prec==NULL)
-        root=x;
+        (*root)=x;
     else if(y==y->prec->left)
         y->prec->left=x;
     else
@@ -82,7 +82,7 @@ car* rimuoviauto(car *root, car *node){
     }
     return y;
 }
-highway_station* rimuovistazione(highway_station *root, highway_station *node){
+highway_station* rimuovistazione(highway_station **root, highway_station *node){
     highway_station *y=NULL, *x=NULL;
     if (node->right==NULL || node->left==NULL)
         y=node;
@@ -93,7 +93,7 @@ highway_station* rimuovistazione(highway_station *root, highway_station *node){
     if (x!=NULL)
         x->prec=y->prec;
     if (y->prec==NULL)
-        root=x;
+        (*root)=x;
     else if(y==y->prec->left)
         y->prec->left=x;
     else
@@ -254,9 +254,9 @@ void aggiungiauto(highway_station *highway, int distanza, int autonomia){
 }
 
 
-void demoliscistazione(highway_station *highway, int distance){
+void demoliscistazione(highway_station **highway, int distance){
     highway_station *curr=NULL, *curr2=NULL;
-    curr=highway;
+    curr=(*highway);
     while(curr!=NULL) {
         if (distance < curr->distance)
             curr = curr->left;
@@ -273,10 +273,10 @@ void demoliscistazione(highway_station *highway, int distance){
 }
 
 
-void rottamauto(highway_station *highway, int distance, int autonomy){
+void rottamauto(highway_station **highway, int distance, int autonomy){
     highway_station *curr=NULL;
     car *curr2=NULL, *curr3=NULL;
-    curr = cercastazione(highway,distance);
+    curr = cercastazione((*highway),distance);
     if (curr==NULL||curr->nCars==0) {
         printf("non rottamata");
         return;
@@ -291,7 +291,7 @@ void rottamauto(highway_station *highway, int distance, int autonomy){
             else {
                 curr2->n--;
                 if(curr2->n==0){
-                    curr3= rimuoviauto((curr->root),curr2);
+                    curr3= rimuoviauto(&(curr->root),curr2);
                     if (curr2->autonomy==curr->maxcarautonomy) {
                         curr2=curr->root;
                         if(curr2==NULL)
@@ -385,12 +385,12 @@ void trovapercorsobackwards(highway_station *highway, highway_station *partenza,
         exnearest=nearest;
     }while(best!=arrivo);
     for(i=l-1;i>=0;i--) {
-        curr = cercastazione(highway, *path[toverify[i]]);
+        curr = cercastazione(highway, (*path)[toverify[i]]);
         if(i>=1)
-            curr2 = cercastazione(highway, *path[toverify[i] - 1]);
+            curr2 = cercastazione(highway, (*path)[toverify[i] - 1]);
         else
             curr2=partenza;
-        curr3 = cercastazione(highway, *path[toverify[i] + 1]);
+        curr3 = cercastazione(highway, (*path)[toverify[i] + 1]);
         while (curr2->maxcarautonomy >= curr2->distance - curr->distance) {
             curr = predecessor(curr);
             if (curr2->maxcarautonomy >= curr2->distance - curr->distance &&
