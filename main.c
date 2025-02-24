@@ -25,29 +25,29 @@ int main(){
                         for (i = 0; i < k; i++) {
                             if (scanf("%d", &m[i])) {};
                         }
-                        aggiungistazione(&highway, j, k, &m);
+                        aggiungistazione(&highway, j, k, m);
                     }
                     else {
                         m = NULL;
-                        aggiungistazione(&highway, j, k, &m);
+                        aggiungistazione(&highway, j, k, m);
                     }
                 }
             }
         } else if (strcmp(parola, "aggiungi-auto ") == 0) {
             if (scanf( "%d", &j))
             if (scanf( "%d", &k))
-            aggiungiauto(&highway, j, k);
+            aggiungiauto(highway, j, k);
         } else if (strcmp(parola, "demolisci-stazione ") == 0) {
             if (scanf( "%d", &j))
-            demoliscistazione(&highway, j);
+            demoliscistazione(highway, j);
         } else if (strcmp(parola, "rottama-auto ") == 0) {
             if (scanf( "%d", &j))
             if (scanf( "%d", &k))
-            rottamauto(&highway, j, k);
+            rottamauto(highway, j, k);
         } else if (strcmp(parola, "pianifica-percorso ") == 0) {
             if (scanf("%d", &j)) {
                 if (scanf("%d", &k)) {
-                    l = pianificapercorso(&highway, j, k, &path);
+                    l = pianificapercorso(highway, j, k, &path);
                     if (l==0)
                         printf("nessun percorso");
                     else {

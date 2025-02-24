@@ -25,10 +25,10 @@ typedef struct car{
     struct car *right;
 } car;
 
-void aggiungistazione(highway_station **highway, int distanza, int nAuto, int **autonomia);
-void aggiungiauto(highway_station **highway, int distanza, int autonomia);
-void demoliscistazione(highway_station **highway, int distance);
-void rottamauto(highway_station **highway, int distance, int autonomy);
-int pianificapercorso(highway_station **highway, int partenza, int arrivo, int**path);
+void aggiungistazione(highway_station **highway, int distanza, int nAuto, int *autonomia);
+void aggiungiauto(highway_station *highway, int distanza, int autonomia);
+void demoliscistazione(highway_station *highway, int distance);
+void rottamauto(highway_station *highway, int distance, int autonomy);
+int pianificapercorso(highway_station *highway, int partenza, int arrivo, int** path);
 
 #endif
