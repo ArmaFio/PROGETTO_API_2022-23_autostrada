@@ -5,7 +5,7 @@
 #define MAXCOM 21
 
 int main(){
-    char parola[MAXCOM+2],a;
+    char parola[MAXCOM],a;
     int i, j, k, *m, *path,l;
     highway_station *highway = NULL;
     while((a =getchar_unlocked())!=EOF){
